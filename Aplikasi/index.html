@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Camera Scanner" />
+  <title>Camera Scanner</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- SPLASH SCREEN -->
+  <div id="splash-screen">
+    <div class="splash-logo">
+      <div class="splash-icon">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="8" y="14" width="48" height="36" rx="5" stroke="#00e5ff" stroke-width="2.5"/>
+          <circle cx="32" cy="32" r="10" stroke="#00e5ff" stroke-width="2.5"/>
+          <circle cx="32" cy="32" r="5" fill="#00e5ff"/>
+          <rect x="22" y="10" width="20" height="6" rx="3" fill="#00e5ff"/>
+          <circle cx="52" cy="20" r="2.5" fill="#00e5ff"/>
+        </svg>
+      </div>
+      <h1>Camera<br/><span>Scanner</span></h1>
+    </div>
+    <p class="splash-sub">Scan. Capture. Save.</p>
+    <div class="splash-loader"><div></div></div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="btn-gallery" class="icon-btn" title="Gallery">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        </button>
+      </div>
+      <h2 class="app-title">Camera Scanner</h2>
+      <div class="header-right">
+        <button id="btn-settings" class="icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- CAMERA VIEW -->
+    <section id="camera-section">
+      <div class="camera-wrapper">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+
+        <!-- Scan overlay corners -->
+        <div class="scan-overlay">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <!-- Mode badge -->
+        <div class="mode-badge" id="mode-badge">AUTO</div>
+
+        <!-- Zoom indicator -->
+        <div class="zoom-indicator" id="zoom-indicator">1.0x</div>
+
+        <!-- Flash indicator -->
+        <div class="flash-indicator hidden" id="flash-effect"></div>
+      </div>
+
+      <!-- BOTTOM CONTROLS -->
+      <div class="camera-controls">
+        <div class="controls-row-top">
+          <!-- Scan mode selector -->
+          <div class="mode-selector">
+            <button class="mode-btn active" data-mode="AUTO">AUTO</button>
+            <button class="mode-btn" data-mode="DOC">DOC</button>
+            <button class="mode-btn" data-mode="PHOTO">PHOTO</button>
+            <button class="mode-btn" data-mode="QR">QR</button>
+          </div>
+        </div>
+
+        <div class="controls-row-main">
+          <!-- Last scan thumbnail -->
+          <button id="btn-last-scan" class="thumb-btn" title="Last scan">
+            <div class="thumb-placeholder">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </button>
+
+          <!-- Shutter -->
+          <button id="btn-shutter" class="shutter-btn" title="Capture">
+            <div class="shutter-inner"></div>
+          </button>
+
+          <!-- Flip camera -->
+          <button id="btn-flip" class="icon-btn large" title="Flip camera">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M20 7h-7M20 7l-3-3M20 7l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 17h7M4 17l3 3M4 17l3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 7h3a5 5 0 015 5v1M20 17h-3a5 5 0 01-5-5v-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="controls-row-bottom">
+          <button id="btn-flash" class="pill-btn" title="Toggle flash">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <path d="M13 2L4.5 13.5H11L11 22L19.5 10.5H13L13 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            <span id="flash-label">Flash Off</span>
+          </button>
+
+          <button id="btn-timer" class="pill-btn" title="Timer">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 9v4l2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M9 3h6M12 3v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span id="timer-label">No Timer</span>
+          </button>
+
+          <button id="btn-grid" class="pill-btn active" title="Grid">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <path d="M8 3v18M16 3v18M3 8h18M3 16h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span>Grid</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- GRID OVERLAY -->
+      <div class="grid-overlay" id="grid-overlay">
+        <div class="grid-line v1"></div>
+        <div class="grid-line v2"></div>
+        <div class="grid-line h1"></div>
+        <div class="grid-line h2"></div>
+      </div>
+
+      <!-- TIMER COUNTDOWN -->
+      <div class="timer-countdown hidden" id="timer-countdown">
+        <span id="timer-number">3</span>
+      </div>
+    </section>
+
+    <!-- GALLERY PANEL -->
+    <div id="gallery-panel" class="panel hidden">
+      <div class="panel-header">
+        <button class="back-btn" id="close-gallery">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h3>My Scans</h3>
+        <button id="btn-clear-all" class="text-btn danger">Clear All</button>
+      </div>
+      <div id="gallery-grid" class="gallery-grid">
+        <div class="gallery-empty">
+          <svg viewBox="0 0 64 64" fill="none" width="64" height="64">
+            <rect x="8" y="14" width="48" height="36" rx="5" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <circle cx="32" cy="32" r="8" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+          </svg>
+          <p>No scans yet.<br/>Capture your first scan!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div id="settings-panel" class="panel hidden">
+      <div class="panel-header">
+        <button class="back-btn" id="close-settings">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h3>Settings</h3>
+        <span></span>
+      </div>
+      <div class="settings-list">
+        <div class="settings-section">
+          <h4>Camera</h4>
+          <div class="setting-item">
+            <span>Resolution</span>
+            <select id="setting-resolution">
+              <option value="hd">HD (1280×720)</option>
+              <option value="fhd" selected>Full HD (1920×1080)</option>
+              <option value="4k">4K (3840×2160)</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <span>Auto-enhance</span>
+            <label class="toggle"><input type="checkbox" id="setting-enhance" checked/><span></span></label>
+          </div>
+          <div class="setting-item">
+            <span>Save to device</span>
+            <label class="toggle"><input type="checkbox" id="setting-save" checked/><span></span></label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h4>Scan</h4>
+          <div class="setting-item">
+            <span>Format</span>
+            <select id="setting-format">
+              <option value="jpeg">JPEG</option>
+              <option value="png" selected>PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <span>Quality</span>
+            <input type="range" id="setting-quality" min="50" max="100" value="92" />
+          </div>
+          <div class="setting-item">
+            <span>Scan sound</span>
+            <label class="toggle"><input type="checkbox" id="setting-sound" checked/><span></span></label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h4>About</h4>
+          <div class="setting-item">
+            <span>App Version</span>
+            <span class="muted">v1.0.0</span>
+          </div>
+          <div class="setting-item">
+            <span>Storage Used</span>
+            <span class="muted" id="storage-used">0 MB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCAN PREVIEW MODAL -->
+    <div id="preview-modal" class="modal hidden">
+      <div class="modal-bg" id="modal-bg"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Scan Preview</h3>
+          <button id="close-modal" class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-image-wrap">
+          <img id="preview-image" src="" alt="Scan preview" />
+        </div>
+        <div class="modal-info">
+          <span id="preview-date" class="muted"></span>
+          <span id="preview-size" class="muted"></span>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-download" class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+              <path d="M12 3v13M7 11l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 19h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Download
+          </button>
+          <button id="btn-share" class="action-btn secondary">
+            <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+              <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+            Share
+          </button>
+          <button id="btn-delete-scan" class="action-btn danger">
+            <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+              <path d="M3 6h18M19 6l-1 14H6L5 6M9 6V4h6v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"></div>
+
+  </div><!-- end #app -->
+
+  <script src="js/app.js"></script>
+  <script>
+    // Register Service Worker for PWA support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
